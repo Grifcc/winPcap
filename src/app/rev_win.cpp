@@ -57,8 +57,6 @@ int main()
   std::thread([&]()
               { VPS4MPcap::instance().openCapture(("udp and port " + std::to_string(port)).c_str(),
                                                   reinterpret_cast<uint8_t *>(&(q))); }).detach();
-
-                                                  
   while (true)
   {
     if (!q.empty())

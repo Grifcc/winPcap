@@ -83,13 +83,20 @@ set(dynamic_libs
 
 message(STATUS "dynamic_libs :${dynamic_libs}")
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
-aux_source_directory(${PROJECT_SOURCE_DIR}/src/vps_pcap DET_SRC_DIR)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/vps_pcap PCAP_SRC)
 add_subdirectory(src/app)
 
 set(CMAKE_INSTALL_RPATH "lib")
 
+
+
+add_library(pcap_rev SHARED ${PCAP_SRC})
+target_link_libraries(pcap_rev
+ pcap
+)
+
 # install target and libraries
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
 message(STATUS "CMAKE_INSTALL_PREFIX :${CMAKE_INSTALL_PREFIX}")
-install(PROGRAMS ${RGA_LIBS} DESTINATION lib)
+install(TARGETS pcap_rev DESTINATION lib)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/data DESTINATION ./)

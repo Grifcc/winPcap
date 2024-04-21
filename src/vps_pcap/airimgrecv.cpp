@@ -121,12 +121,6 @@ void *AirImgRecv::imgRecv(uint8_t *data, void *out_data)
     {
       auto out_ptr = ImgMemoryManager::instance().getFreeMem(n_w * n_h);
       ImgMemoryManager::instance().setBusy();
-
-      if (m_save)
-      {
-        cv::Mat win(512, 512, CV_8UC1, out_ptr);
-        cv::imwrite(std::to_string(frame) + "_" + std::to_string(win_idx) + ".jpg", win);
-      }
       AirImg *n_retImg = new AirImg;
       n_retImg->frame_id = frame;
       n_retImg->mempool_point = *(out_ptr - 1);

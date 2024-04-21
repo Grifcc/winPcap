@@ -30,9 +30,6 @@ private:
 public:
   bool init10g();
 
-  void printCnt();
-  void clearCnt();
-
 private:
   void closeConnect10g();
 

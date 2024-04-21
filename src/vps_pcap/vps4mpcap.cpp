@@ -17,7 +17,8 @@ using namespace std;
 #define RTN_ERR_DLT_EN10MB (-5)
 #define RTN_OK (0)
 
-VPS4MPcap::VPS4MPcap() {
+VPS4MPcap::VPS4MPcap()
+{
   m_ethHandle = NULL;
   m_ethIndex = -1;
   m_info = new VPSEthernetInfo;
@@ -25,13 +26,16 @@ VPS4MPcap::VPS4MPcap() {
   imgrev_ = new AirImgRecv();
 }
 
-VPS4MPcap::~VPS4MPcap() {
+VPS4MPcap::~VPS4MPcap()
+{
   closeAll();
   delete imgrev_;
 }
 
-void VPS4MPcap::closeAll() {
-  if (m_info) {
+void VPS4MPcap::closeAll()
+{
+  if (m_info)
+  {
     delete m_info;
     m_info = NULL;
   }
@@ -48,46 +52,56 @@ int g_pcapKernelBufferSize = 20 * 1024 * 1024;
 int g_pcapCommitSize = 5 * 1024 * 1024;
 int g_pcapUserBufferSize = 15 * 1024 * 1024;
 
-bool recvCheck(uint8_t *buf, int len)  // 16
+bool recvCheck(uint8_t *buf, int len) // 16
 {
-  if (len > 1 && len < 2048) {
+  if (len > 1 && len < 2048)
+  {
     uint8_t sum = 0;
-    for (int i = 0; i < len - 1; i++) sum += buf[i];
+    for (int i = 0; i < len - 1; i++)
+      sum += buf[i];
     return sum == buf[len - 1];
   }
   return false;
 }
 
 // pcap回调，注意这里是跨线程调用
-void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
+void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data)
+{
   void *out_data = nullptr;
-  if (!pkt_data || header->len < 60 || header->len > 1514) return;
+  if (!pkt_data || header->len < 60 || header->len > 1514)
+    return;
 
   cnt1++;
 
-  if (header->len == 1083 && pkt_data[42] == 0x81) {
+  if (header->len == 1083 && pkt_data[42] == 0x81)
+  {
     cnt2++;
-    if (recvCheck((uint8_t *)pkt_data + 42, 1041)) {
+    if (recvCheck((uint8_t *)pkt_data + 42, 1041))
+    {
       cnt3++;
       VPS4MPcap::instance().recvPack((uint8_t *)pkt_data + 42, out_data);
     }
   }
 }
 
-void* VPS4MPcap::recvPack(void *vdata, void *out_data) { return imgrev_->imgRecv((uint8_t *)vdata, out_data); }
+void *VPS4MPcap::recvPack(void *vdata, void *out_data) { return imgrev_->imgRecv((uint8_t *)vdata, out_data); }
 
-bool VPS4MPcap::init10g() {
+bool VPS4MPcap::init10g()
+{
   closeConnect10g();
 
   pcapQueryEthernet();
 
   int cnt = getEthernetCnt();
-  for (int i = 0; i < cnt; i++) {
+  for (int i = 0; i < cnt; i++)
+  {
     int res = strcmp(m_info->Ethernet[i], "eth0");
-    if (res == 0) {
-      //defalut callback handler
+    if (res == 0)
+    {
+      // defalut callback handler
       pcapSetHandler(packet_handler);
-      if (!pcapInit(i)) {
+      if (!pcapInit(i))
+      {
         resetPcapEthHandle();
         return false;
       }
@@ -99,30 +113,23 @@ bool VPS4MPcap::init10g() {
   return false;
 }
 
-void VPS4MPcap::printCnt() {
-  cout << "cnt : " << cnt1 << " " << cnt2 << " " << cnt3;
-  clearCnt();
-}
-
-void VPS4MPcap::clearCnt() {
-  cnt1 = 0;
-  cnt2 = 0;
-  cnt3 = 0;
-}
-
-bool VPS4MPcap::pcapQueryEthernet() {
+bool VPS4MPcap::pcapQueryEthernet()
+{
   m_info->EthernetCnt = 0;
 
   pcap_if_t *d;
   pcap_if_t *alldevs;
   char errbuf[PCAP_ERRBUF_SIZE];
-  if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+  if (pcap_findalldevs(&alldevs, errbuf) == -1)
+  {
     return false;
   }
 
   int inum = 0;
-  for (d = alldevs; d; d = d->next) {
-    if (d->description != NULL) {
+  for (d = alldevs; d; d = d->next)
+  {
+    if (d->description != NULL)
+    {
       string description(d->description);
       if (description.find("virtual") != string::npos || description.find("Virtual") != string::npos ||
           description.find("wireless") != string::npos || description.find("Wireless") != string::npos)
@@ -143,28 +150,33 @@ int VPS4MPcap::getEthernetCnt() { return m_info->EthernetCnt; }
 
 VPSEthernetInfo VPS4MPcap::getEthernetScanResult() { return *m_info; }
 
-int VPS4MPcap::openCapture(const char *filter_exp,uint8_t *custom_param) {
-  if (m_ethIndex < 0 || m_ethIndex > m_info->EthernetCnt - 1) {
+int VPS4MPcap::openCapture(const char *filter_exp, uint8_t *custom_param)
+{
+  if (m_ethIndex < 0 || m_ethIndex > m_info->EthernetCnt - 1)
+  {
     return RTN_ERR_FIND_DEVICES;
   }
 
-  char errbuf[PCAP_ERRBUF_SIZE];            // 错误缓冲区
-  struct bpf_program fp;                    // BPF过滤器程序
+  char errbuf[PCAP_ERRBUF_SIZE]; // 错误缓冲区
+  struct bpf_program fp;         // BPF过滤器程序
   // char filter_exp[] = "udp and port 8189";  // 过滤规则
 
   // 打开网卡设备
   m_ethHandle = pcap_open_live(m_info->Ethernet[m_ethIndex], 1200, 1, 1000, errbuf);
-  if (m_ethHandle == NULL) {
+  if (m_ethHandle == NULL)
+  {
     fprintf(stderr, "无法打开网卡设备: %s\n", errbuf);
     return 1;
   }
 
   // 编译并设置过滤规则
-  if (pcap_compile(m_ethHandle, &fp, filter_exp, 0, PCAP_NETMASK_UNKNOWN) == -1) {
+  if (pcap_compile(m_ethHandle, &fp, filter_exp, 0, PCAP_NETMASK_UNKNOWN) == -1)
+  {
     fprintf(stderr, "无法编译过滤规则: %s\n", pcap_geterr(m_ethHandle));
     return 1;
   }
-  if (pcap_setfilter(m_ethHandle, &fp) == -1) {
+  if (pcap_setfilter(m_ethHandle, &fp) == -1)
+  {
     fprintf(stderr, "无法设置过滤规则: %s\n", pcap_geterr(m_ethHandle));
     return 1;
   }
@@ -172,16 +184,15 @@ int VPS4MPcap::openCapture(const char *filter_exp,uint8_t *custom_param) {
   // // 开始捕获数据包
   pcap_loop(m_ethHandle, 0, m_packet_handler, custom_param);
 
-  // // 关闭pcap句柄
-  pcap_close(m_ethHandle);
-
   return RTN_OK;
 }
 
 void VPS4MPcap::pcapSetHandler(VPSMPcapHandler *packet_handler) { m_packet_handler = packet_handler; }
 
-bool VPS4MPcap::pcapInit(int index) {
-  if (m_ethHandle != NULL) {
+bool VPS4MPcap::pcapInit(int index)
+{
+  if (m_ethHandle != NULL)
+  {
     resetPcapEthHandle();
   }
 
@@ -190,8 +201,12 @@ bool VPS4MPcap::pcapInit(int index) {
   return true;
 }
 
-void VPS4MPcap::pcapClose() {
-  if (m_ethHandle) {
+void VPS4MPcap::pcapClose()
+{
+  if (m_ethHandle)
+  {
     pcap_breakloop(m_ethHandle);
+    // // 关闭pcap句柄
+    pcap_close(m_ethHandle);
   }
 }

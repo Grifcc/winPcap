@@ -1,6 +1,6 @@
 
 add_executable(rev_win rev_win.cpp ${DET_SRC_DIR})
-target_link_libraries(rev_win ${dynamic_libs} ${OpenCV_LIBS})
+target_link_libraries(rev_win ${dynamic_libs} pcap_rev opencv_core)
 
 
 add_executable(send_win send_win.cpp ${DET_SRC_DIR})
