@@ -90,13 +90,14 @@ set(CMAKE_INSTALL_RPATH "lib")
 
 
 
-add_library(pcap_rev SHARED ${PCAP_SRC})
-target_link_libraries(pcap_rev
+add_library(vps_pcap SHARED ${PCAP_SRC})
+target_link_libraries(vps_pcap
  pcap
 )
 
 # install target and libraries
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
 message(STATUS "CMAKE_INSTALL_PREFIX :${CMAKE_INSTALL_PREFIX}")
-install(TARGETS pcap_rev DESTINATION lib)
+install(TARGETS vps_pcap DESTINATION lib)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/data DESTINATION ./)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/vps_pcap DESTINATION ./inlcude)
