@@ -39,14 +39,11 @@ void VPS4MPcap::closeAll()
     delete m_info;
     m_info = NULL;
   }
-  closeConnect10g();
+  if (opened_)
+  {
+    pcapClose();
+  }
 }
-
-void VPS4MPcap::closeConnect10g() { pcapClose(); }
-
-static uint32_t cnt1 = 0;
-static uint32_t cnt2 = 0;
-static uint32_t cnt3 = 0;
 
 int g_pcapKernelBufferSize = 20 * 1024 * 1024;
 int g_pcapCommitSize = 5 * 1024 * 1024;
@@ -71,14 +68,10 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
   if (!pkt_data || header->len < 60 || header->len > 1514)
     return;
 
-  cnt1++;
-
   if (header->len == 1083 && pkt_data[42] == 0x81)
   {
-    cnt2++;
     if (recvCheck((uint8_t *)pkt_data + 42, 1041))
     {
-      cnt3++;
       VPS4MPcap::instance().recvPack((uint8_t *)pkt_data + 42, out_data);
     }
   }
@@ -88,7 +81,7 @@ void *VPS4MPcap::recvPack(void *vdata, void *out_data) { return imgrev_->imgRecv
 
 bool VPS4MPcap::init10g()
 {
-  closeConnect10g();
+  pcapClose();
 
   pcapQueryEthernet();
 
@@ -102,7 +95,7 @@ bool VPS4MPcap::init10g()
       pcapSetHandler(packet_handler);
       if (!pcapInit(i))
       {
-        resetPcapEthHandle();
+        pcapClose();
         return false;
       }
       usleep(250 * 1000);
@@ -180,7 +173,7 @@ int VPS4MPcap::openCapture(const char *filter_exp, uint8_t *custom_param)
     fprintf(stderr, "无法设置过滤规则: %s\n", pcap_geterr(m_ethHandle));
     return 1;
   }
-
+  opened_ = true;
   // // 开始捕获数据包
   pcap_loop(m_ethHandle, 0, m_packet_handler, custom_param);
 
@@ -193,7 +186,7 @@ bool VPS4MPcap::pcapInit(int index)
 {
   if (m_ethHandle != NULL)
   {
-    resetPcapEthHandle();
+    pcapClose();
   }
 
   m_ethIndex = index;
@@ -203,10 +196,14 @@ bool VPS4MPcap::pcapInit(int index)
 
 void VPS4MPcap::pcapClose()
 {
+  if(!opened_)
+  {
+    return;
+  }
   if (m_ethHandle)
   {
     pcap_breakloop(m_ethHandle);
-    // // 关闭pcap句柄
     pcap_close(m_ethHandle);
   }
+  opened_ = false;
 }

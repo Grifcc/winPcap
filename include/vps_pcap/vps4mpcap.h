@@ -30,8 +30,6 @@ private:
 public:
   bool init10g();
 
-private:
-  void closeConnect10g();
 
 public:
   /// 查询网卡数量和名字\n
@@ -47,8 +45,6 @@ public:
   /// 网卡index（从0开始），调用前需要先设置handler; 如果m_ethHandle不为0则强制reset\n
   /// 返回false，表示网卡打开失败
   bool pcapInit(int index);
-
-  void resetPcapEthHandle() { pcapClose(); }
 
   /// 退出loop及loop线程, 如果存在
   void pcapClose();
@@ -73,6 +69,8 @@ private:
 
   VPSMPcapHandler *m_packet_handler;
   AirImgRecv *imgrev_;
+  
+  bool opened_=false;
 };
 
 bool recvCheck(uint8_t *buf, int len);
