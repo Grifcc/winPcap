@@ -11,6 +11,7 @@ bool ImgMemoryManager::mallocMemoryPool(size_t mem_pool_size)
   mem_pool_size_ = mem_pool_size;
   img_nums_ = mem_pool_size_ / static_cast<uint64_t>(WINMODEWIDTH * WINMODEHEIGHT);
   busy_flags_ = new std::atomic<bool>[img_nums_];
+  m_pool = new unsigned char *[img_nums_];
   for (int i = 0; i < img_nums_; i++)
   {
     m_pool[i] = new unsigned char[WINMODEWIDTH * WINMODEHEIGHT];
