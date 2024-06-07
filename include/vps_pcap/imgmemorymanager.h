@@ -27,7 +27,7 @@ public:
   void setFree(int8_t point);
 
 private:
-  unsigned char *m_pool = nullptr; // 分配内存池
+  unsigned char *m_pool[65535]; // 分配内存池
 
   int platform_;
   size_t mem_pool_size_;
