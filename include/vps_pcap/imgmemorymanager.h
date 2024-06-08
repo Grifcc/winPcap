@@ -24,7 +24,7 @@ public:
   unsigned char *getFreeMem(int offset);
 
   void setBusy();
-  void setFree(unsigned int point);
+  void setFree(int point);
 
 private:
   unsigned char **m_pool; // 分配内存池
@@ -32,6 +32,6 @@ private:
   int platform_;
   size_t mem_pool_size_;
   std::atomic<bool> *busy_flags_;
-  int8_t using_point_ = -1;
+  int using_point_ = -1;
   int img_nums_;
 };
