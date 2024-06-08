@@ -24,7 +24,7 @@ public:
   unsigned char *getFreeMem(int offset);
 
   void setBusy();
-  void setFree(int8_t point);
+  void setFree(unsigned int point);
 
 private:
   unsigned char **m_pool; // 分配内存池

@@ -14,9 +14,9 @@ bool ImgMemoryManager::mallocMemoryPool(size_t mem_pool_size)
   m_pool = new unsigned char *[img_nums_];
   for (int i = 0; i < img_nums_; i++)
   {
-    m_pool[i] = new unsigned char[WINMODEWIDTH * WINMODEHEIGHT];
-    memset(m_pool[i], 0, WINMODEWIDTH * WINMODEHEIGHT);
-    mlock(m_pool[i], WINMODEWIDTH * WINMODEHEIGHT);
+    m_pool[i] = new unsigned char[WINMODEWIDTH * WINMODEHEIGHT + 4];
+    memset(m_pool[i], 0, WINMODEWIDTH * WINMODEHEIGHT + 4);
+    mlock(m_pool[i], WINMODEWIDTH * WINMODEHEIGHT + 4);
     busy_flags_[i].store(false);
   }
   return true;
@@ -27,9 +27,9 @@ void ImgMemoryManager::setBusy()
   busy_flags_[using_point_].store(true);
   using_point_ = -1;
 }
-void ImgMemoryManager::setFree(int8_t point)
+void ImgMemoryManager::setFree(unsigned int point)
 {
-  memset(m_pool[point], 0, WINMODEWIDTH * WINMODEHEIGHT);
+  memset(m_pool[point], 0, WINMODEWIDTH * WINMODEHEIGHT + 4);
   busy_flags_[point].store(false);
 }
 
@@ -48,7 +48,8 @@ unsigned char *ImgMemoryManager::getFreeMem(int offset)
       if (!busy_flags_[i].load())
       {
         using_point_ = i;
-        return m_pool[using_point_];
+        *reinterpret_cast<uint32_t *>(m_pool[using_point_]) = using_point_;
+        return m_pool[using_point_] + 4;
       }
     }
     using_point_ = -2;
@@ -61,7 +62,7 @@ void ImgMemoryManager::releaseMemory()
   {
     for (int i = 0; i < img_nums_; i++)
     {
-      munlock(m_pool[i], WINMODEWIDTH * WINMODEHEIGHT);
+      munlock(m_pool[i], WINMODEWIDTH * WINMODEHEIGHT + 4);
       delete[] m_pool[i];
     }
     delete[] m_pool;

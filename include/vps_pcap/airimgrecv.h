@@ -44,7 +44,7 @@ struct AirImg
   uint8_t win_idx; // 象限号、窗口号
   uint16_t winX;   // winX, or reserve
   uint16_t winY;   // winY, or reserve
-  uint8_t mempool_point;
+  uint32_t mempool_point;
 };
 
 class AirImgRecv

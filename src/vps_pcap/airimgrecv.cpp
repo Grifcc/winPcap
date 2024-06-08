@@ -123,7 +123,7 @@ void *AirImgRecv::imgRecv(uint8_t *data, void *out_data)
       ImgMemoryManager::instance().setBusy();
       AirImg *n_retImg = new AirImg;
       n_retImg->frame_id = frame;
-      n_retImg->mempool_point = *(out_ptr - 1);
+      n_retImg->mempool_point = *reinterpret_cast<uint32_t *>(out_ptr - 4);
       n_retImg->win_idx = win_idx;
       n_retImg->winX = winX;
       n_retImg->winY = winY;
