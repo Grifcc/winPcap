@@ -41,7 +41,7 @@ unsigned char *ImgMemoryManager::getFreeMem(int offset)
     return nullptr;
   else if (using_point_ < img_nums_ && using_point_ != -1)
   { // lock
-    return m_pool[using_point_];
+    return m_pool[using_point_] + 4;
   }
   else if (using_point_ == -1)
   {
