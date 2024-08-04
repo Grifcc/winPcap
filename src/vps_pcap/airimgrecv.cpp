@@ -88,8 +88,6 @@ void *AirImgRecv::imgRecv(uint8_t *data, void *out_data)
     uint16_t pkt = vpskit::transEnd(*(uint16_t *)((data + 6)));
     uint16_t winX = vpskit::transEnd(*(uint16_t *)((data + 8)));
     uint16_t winY = vpskit::transEnd(*(uint16_t *)((data + 10)));
-    if (win_idx != win_idx_)
-      return nullptr;
     n_airImgPacket.fun = fun;
     n_airImgPacket.model = model;
     n_airImgPacket.frame = frame;
@@ -99,24 +97,14 @@ void *AirImgRecv::imgRecv(uint8_t *data, void *out_data)
     n_airImgPacket.winY = winY;
 
     // 全幅图像
-    // 窗口
-    if (data[1] == 0x05)
-    {
-      offset = pkt * 1024;
-    }
-
+    offset = pkt * 1024;
     dst = ImgMemoryManager::instance().getFreeMem(n_w * n_h * 2) + offset;
     if (dst == nullptr)
     {
       printf("can't get free mem\n");
       return nullptr;
     }
-
-    if (data[1] == 0x05)
-    {
-      memcpy(dst, data + 16, 1024);
-    }
-
+    memcpy(dst, data + 16, 1024);
     if (isLastPacket(data))
     {
       auto out_ptr = ImgMemoryManager::instance().getFreeMem(n_w * n_h);

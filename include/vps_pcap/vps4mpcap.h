@@ -57,11 +57,6 @@ public:
   int openCapture(const char *filter_exp, uint8_t *custom_param);
   void *recvPack(void *vdata, void *out_data);
 
-  void set_WinIdx(uint8_t idx)
-  {
-    imgrev_->set_WinIdx(idx);
-  }
-
 private:
   VPSEthernetInfo *m_info;
   pcap_t *volatile m_ethHandle; // 跨线程调用了

@@ -28,7 +28,6 @@ void packet_handler_t(u_char *param, const struct pcap_pkthdr *header, const u_c
 int main()
 {
   int port = 8189;
-  int win_idx = 0;
   threadsafe_queue<void *> q;
   bool ret = VPS4MPcap::instance().init10g();
   if (ret)
@@ -52,7 +51,6 @@ int main()
   }
   MLOG_INFO("start to capture udp pack.");
   VPS4MPcap::instance().pcapSetHandler(packet_handler_t);
-  VPS4MPcap::instance().set_WinIdx(win_idx);
 
   std::thread([&]()
               { VPS4MPcap::instance().openCapture(("udp and port " + std::to_string(port)).c_str(),
@@ -66,8 +64,7 @@ int main()
       //process
       MLOG_INFO("rev paket:%d", Airpack->frame_id);
       cv::Mat img(512, 512, CV_8UC1, Airpack->frame);
-      // cv::imwrite("rev_img/" + std::to_string(Airpack->frame_id) + "_" + std::to_string(Airpack->win_idx) + ".jpg", img);
-      
+      cv::imwrite("rev_img/" + std::to_string(Airpack->frame_id) + "_" + std::to_string(Airpack->win_idx) + ".jpg", img);
       ImgMemoryManager::instance().setFree(Airpack->mempool_point);  //必须的
       delete Airpack;  // 必须的
     }

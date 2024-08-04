@@ -57,11 +57,6 @@ public:
   void startRecv() { m_shouldRecv = true; }
   void stopRecv() { m_shouldRecv = false; }
 
-  void set_WinIdx(uint8_t idx)
-  {
-    win_idx_ = idx;
-  }
-
 private:
   bool isLastPacket(uint8_t *data);
 
@@ -71,6 +66,5 @@ private:
   bool m_win1Model = true; // only one win
   bool m_save = false;
   bool m_view = false;
-  uint8_t win_idx_ = 0;
   uint8_t *mempool;
 };
