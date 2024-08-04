@@ -19,7 +19,7 @@ void packet_handler_t(u_char *param, const struct pcap_pkthdr *header, const u_c
       out_data = VPS4MPcap::instance().recvPack((uint8_t *)pkt_data + 42, NULL);
       if (out_data)
       {
-        reinterpret_cast<threadsafe_queue<void *> *>(param)->push(out_data);
+        (*reinterpret_cast<std::vector<threadsafe_queue<void *>> *>(param))[reinterpret_cast<AirImg *>(out_data)->win_idx % 2].push(out_data);
       }
     }
   }
@@ -28,7 +28,8 @@ void packet_handler_t(u_char *param, const struct pcap_pkthdr *header, const u_c
 int main()
 {
   int port = 8189;
-  threadsafe_queue<void *> q;
+  int win_idx = 0;  // 窗口号
+  std::vector<threadsafe_queue<void *>> q(2);  // 存奇数窗和偶数窗
   bool ret = VPS4MPcap::instance().init10g();
   if (ret)
   {
@@ -54,19 +55,19 @@ int main()
 
   std::thread([&]()
               { VPS4MPcap::instance().openCapture(("udp and port " + std::to_string(port)).c_str(),
-                                                  reinterpret_cast<uint8_t *>(&(q))); }).detach();
+                                                  reinterpret_cast<uint8_t *>(&(q))); })
+      .detach();
   while (true)
   {
-    if (!q.empty())
+    if (!q[win_idx%2].empty())
     {
-      AirImg *Airpack = reinterpret_cast<AirImg *>(q.wait_and_pop());  // 必须
-
-      //process
+      AirImg *Airpack = reinterpret_cast<AirImg *>(q[win_idx%2].wait_and_pop()); // 必须
+      // process
       MLOG_INFO("rev paket:%d", Airpack->frame_id);
       cv::Mat img(512, 512, CV_8UC1, Airpack->frame);
       cv::imwrite("rev_img/" + std::to_string(Airpack->frame_id) + "_" + std::to_string(Airpack->win_idx) + ".jpg", img);
-      ImgMemoryManager::instance().setFree(Airpack->mempool_point);  //必须的
-      delete Airpack;  // 必须的
+      ImgMemoryManager::instance().setFree(Airpack->mempool_point); // 必须的
+      delete Airpack;                                               // 必须的
     }
   }
 }
